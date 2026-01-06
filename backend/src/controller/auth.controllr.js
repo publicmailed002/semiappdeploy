@@ -1,6 +1,10 @@
+import { sendWelecoEmail } from "../emails/emailHandlers.js";
 import { generateToken } from "../lib/utils.js";
 import User from "../models/User.js";
 import bcrypt from "bcrypt";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export const signup = async (req,res)=>{
     const {FullName , email ,password} = req.body;
@@ -40,14 +44,25 @@ export const signup = async (req,res)=>{
         })
 
         if(newUser){
-            generateToken(newUser._id,res);
-            await newUser.save();
+            // generateToken(newUser._id,res);
+            // await newUser.save();
+            const savedUSer = await newUser.save();
+            generateToken(savedUSer._id,res);
             res.status(201).json({
                 _id: newUser._id,
                 FullName : newUser.FullName,
                 email : newUser.email,
                 ProfilePic : newUser.ProfilePic
             })
+
+            try{ 
+
+                await sendWelecoEmail(savedUSer.email,savedUSer.FullName,process.env.CLIENT_URL);
+                
+
+            }catch(error){
+                console.log("Error sending welcome email:", error)
+            }
         }else{
             res.status(500).json({message : "Invalid user data"})
         }
