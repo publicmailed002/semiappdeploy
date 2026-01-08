@@ -1,6 +1,7 @@
 import express from 'express';
 import { signup, login, logout, updateProfile } from './controller/auth.controllr.js';
 import { protectRoute } from './middleware/auth.middlwear.js';
+import { arjProtection } from './middleware/arcjet.middlware.js';
 
 
 const router = express.Router();
@@ -8,7 +9,7 @@ const router = express.Router();
 
 
 
-
+router.use(arjProtection);
 
 router.post('/signup',signup);
 
