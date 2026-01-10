@@ -4,10 +4,15 @@ import authRoutes from './src/authe.rout.js';
 import messageauth from './src/message.rout.js';
 import { connectDB } from './src/lib/db.js';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
 dotenv.config();
 
 const app = express();
 app.use(express.json());
+app.use(cors({
+  origin: process.env.CLIENT_URL,
+  credentials: true,
+}));
 const port = process.env.PORT || 3001;
 
 // app.get('/api/server', (req, res) => {
