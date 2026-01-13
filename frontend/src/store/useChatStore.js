@@ -1,7 +1,7 @@
 import {create} from "zustand";
 import {axiosinstance} from '../lib/axios';
 import toast from 'react-hot-toast';
-
+import { useAuthStore } from "./useAuthStore";
 
 
 export const useChatStore = create((set,get)=> ({
@@ -76,5 +76,43 @@ export const useChatStore = create((set,get)=> ({
             set({isMessagesLoding:false})
         }
         
+    },
+    sendMessage: async (messageData) =>{
+          
+        const {selectedUser ,messages} = get();
+
+        const {authUser} = useAuthStore.getState()
+
+        const tempId = `temp-${Date.now()}`;
+
+
+        const opmisticeMessage = {
+            _id :tempId,
+            senderId:authUser._id,
+            receiverId:selectedUser._id,
+            text:messageData.text,
+            image:messageData.image,
+            createdAt:new Date().toISOString(),
+            isOptimistice :true // flage to indetify optimistice meessage
+        }
+
+        //immidetaly update the ui by adding the message 
+
+        set({messages : [...messages , opmisticeMessage]})
+         
+        try{
+
+            const res  = await axiosinstance.post(`/message/send/${selectedUser._id}`,messageData)
+            set({messages : messages.concat(res.data)})
+
+
+        }catch(error){
+            // remove optimistice messge on failure
+            set({messages :messages})
+
+            toast.error(error.response?.data?.message|| "Semothing went worng")
+
+        }
+
     }
 }))
