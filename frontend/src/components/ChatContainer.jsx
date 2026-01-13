@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useChatStore } from '../store/useChatStore'
 import { useAuthStore } from '../store/useAuthStore'
 import ChatHader from './ChatHader';
@@ -10,9 +10,18 @@ function ChatContainer() {
   const {selectedUser , getMessagesByUserId ,messages ,isMessagesLoding} = useChatStore();
   const {authUser}  = useAuthStore();
 
+  const messgeEndRef = useRef(null)
+
   useEffect(()=>{
       getMessagesByUserId(selectedUser._id)
   },[selectedUser ,getMessagesByUserId])
+
+
+  useEffect(()=>{
+    if(messgeEndRef.current){
+      messgeEndRef.current.scrollIntoView({behavior : "smooth"})
+    }
+  },[messages])
   return (
     <>
      <ChatHader/>
@@ -34,7 +43,10 @@ function ChatContainer() {
                 {msg.text && <p className='mt-2'> {msg.text }</p>}
 
                 <p className='text-xs mt-1 opacity-75 flex items-center gap-1'>
-                  {new Date(msg.createdAt).toISOString().slice(11,16)}
+                  {new Date(msg.createdAt).toLocaleTimeString(undefined ,{
+                    hour:"2-digit",
+                    minute:"2-digit"
+                  })}
                 </p>
 
            </div>
@@ -42,6 +54,8 @@ function ChatContainer() {
 
           </div>
         ))}
+
+        <div ref={messgeEndRef}/>
 
        </div>
       ): isMessagesLoding ? <MeesgesLodingSkelton/> :(
