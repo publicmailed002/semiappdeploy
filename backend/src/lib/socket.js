@@ -1,58 +1,48 @@
-import {Server} from 'socket.io'
-import http from 'http'
-import express from "express"
-import dotenv from "dotenv"
-import { socketAuthMiddlaware } from '../middleware/socket.auth.middlware.js'
+import { Server } from 'socket.io';
+import dotenv from 'dotenv';
+import { socketAuthMiddlaware } from '../middleware/socket.auth.middlware.js';
 
-dotenv.config()
+dotenv.config();
 
+let io;
+const userSocketMap = {};
 
-const app = express()
+export function initSockets(server) {
+  if (io) return io; // already initialized
 
-const server  =  http.createServer(app)
+  io = new Server(server, {
+    cors: {
+      origin: [process.env.CLIENT_URL],
+      credentials: true,
+    },
+  });
 
-const io = new Server(server,{
-    cors:{
-        origin:[process.env.CLIENT_URL],
-        credentials:true,
-    }
-})
+  // apply authentication middleware to all socket connection
+  io.use(socketAuthMiddlaware);
 
-// apply authentication middleware to all socket connection
-io.use(socketAuthMiddlaware)
-
-
-// we will use this function to check if the user is online or not
-export function getReciverSocketId(userId){
-
-    return userSocketMap[userId]
-
-}
-
-
-//this for store online users
-
-const userSocketMap = {}; // {userId=soketId}
-
-
-io.on("connection" ,(socket) =>{
-    console.log("A user connected" ,socket.user.FullName)
+  io.on('connection', (socket) => {
+    // eslint-disable-next-line no-console
+    console.log('A user connected', socket.user?.FullName);
 
     const userId = socket.userId;
-    userSocketMap[userId] = socket.id; 
-     
-     //io.emit() is used to send events to all connected clients
-    io.emit('getOnlineUsers' ,Object.keys(userSocketMap))
+    userSocketMap[userId] = socket.id;
 
-    //with socket.on we listen for events from clients
-    socket.on('disconnect' , () =>{
-        console.log("A user disconnect" ,socket.user.FullName)
+    io.emit('getOnlineUsers', Object.keys(userSocketMap));
 
-        delete userSocketMap[userId]
+    socket.on('disconnect', () => {
+      // eslint-disable-next-line no-console
+      console.log('A user disconnect', socket.user?.FullName);
 
-        io.emit('getOnlineUsers' ,Object.keys(userSocketMap));
-    })
-})
+      delete userSocketMap[userId];
+      io.emit('getOnlineUsers', Object.keys(userSocketMap));
+    });
+  });
 
+  return io;
+}
 
-export {io ,app ,server };
+export function getReciverSocketId(userId) {
+  return userSocketMap[userId];
+}
+
+export { io };
