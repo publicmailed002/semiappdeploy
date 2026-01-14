@@ -7,12 +7,25 @@ let dbReady = false;
 
 async function ensureDb() {
   if (dbReady) return;
-  await connectDB();
-  dbReady = true;
+  try {
+    await connectDB();
+    dbReady = true;
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Error connecting to DB in serverless handler:', err && err.message ? err.message : err);
+    // Do not re-throw: allow the handler to run so routes that do not need DB (such as /api/hello) can respond.
+  }
 }
 
 export default async function (req, res) {
-  await ensureDb();
   if (!handler) handler = serverless(app);
-  return handler(req, res);
+  await ensureDb();
+  try {
+    return handler(req, res);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Handler invocation error:', err && err.message ? err.message : err);
+    res.statusCode = 500;
+    return res.end('Internal Server Error');
+  }
 }
