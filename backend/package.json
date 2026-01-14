@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vercel dev --listen 3001",
+    "dev": "node server.js",
     "start": "node server.js",
     "start:prod": "nodemon server.js"
   },
