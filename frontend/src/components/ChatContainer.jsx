@@ -7,14 +7,16 @@ import MessageInput from './MessageInput';
 import MeesgesLodingSkelton from './MeesgesLodingSkelton';
 function ChatContainer() {
 
-  const {selectedUser , getMessagesByUserId ,messages ,isMessagesLoding} = useChatStore();
+  const {selectedUser , getMessagesByUserId ,messages ,isMessagesLoding, subscribeToMessages ,unsubscribeFromMessages} = useChatStore();
   const {authUser}  = useAuthStore();
 
   const messgeEndRef = useRef(null)
 
   useEffect(()=>{
       getMessagesByUserId(selectedUser._id)
-  },[selectedUser ,getMessagesByUserId])
+      subscribeToMessages()
+      return () => unsubscribeFromMessages()
+  },[selectedUser ,getMessagesByUserId ,subscribeToMessages ,unsubscribeFromMessages])
 
 
   useEffect(()=>{
